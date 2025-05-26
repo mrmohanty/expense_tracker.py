@@ -1,0 +1,109 @@
+import csv
+import os
+from datetime import datetime
+
+expenses = []
+budget = 0.0
+
+# Load expenses from CSV at startup
+def load_expenses(filename="expenses.csv"):
+    if os.path.exists(filename):
+        with open(filename, mode="r") as file:
+            reader = csv.DictReader(file)
+            for row in reader:
+                try:
+                    row["amount"] = float(row["amount"])
+                    expenses.append(row)
+                except ValueError:
+                    print(f"Skipping invalid row: {row}")
+
+# Save expenses to CSV
+def save_expenses(filename="expenses.csv"):
+    with open(filename, mode="w", newline="") as file:
+        writer = csv.DictWriter(file, fieldnames=["date", "category", "amount", "description"])
+        writer.writeheader()
+        for expense in expenses:
+            writer.writerow(expense)
+    print("✅ Expenses saved successfully.")
+
+# Add new expense
+def add_expense():
+    try:
+        date = input("Enter date (YYYY-MM-DD): ")
+        datetime.strptime(date, "%Y-%m-%d")  # Validate date
+        category = input("Enter category (e.g., Food, Travel): ")
+        amount = float(input("Enter amount: "))
+        description = input("Enter description: ")
+
+        expense = {
+            "date": date,
+            "category": category,
+            "amount": amount,
+            "description": description
+        }
+        expenses.append(expense)
+        print("✅ Expense added successfully.")
+    except ValueError:
+        print("❌ Invalid input. Please try again.")
+
+# View all expenses
+def view_expenses():
+    if not expenses:
+        print("📭 No expenses to display.")
+        return
+    print("\n--- All Expenses ---")
+    for expense in expenses:
+        if all(k in expense for k in ["date", "category", "amount", "description"]):
+            print(f"{expense['date']} | {expense['category']} | ₹{expense['amount']} | {expense['description']}")
+        else:
+            print("❌ Incomplete entry skipped.")
+
+# Set and track budget
+def track_budget():
+    global budget
+    if budget == 0:
+        try:
+            budget = float(input("Enter your monthly budget: "))
+        except ValueError:
+            print("❌ Invalid budget amount.")
+            return
+
+    total_spent = sum(e["amount"] for e in expenses)
+    remaining = budget - total_spent
+
+    print(f"\n💰 Monthly Budget: ₹{budget}")
+    print(f"📊 Total Spent: ₹{total_spent}")
+    if remaining < 0:
+        print(f"⚠️ You have exceeded your budget by ₹{-remaining}!")
+    else:
+        print(f"✅ You have ₹{remaining} left this month.")
+
+# Main interactive menu
+def menu():
+    load_expenses()
+    while True:
+        print("\n📋 Expense Tracker Menu:")
+        print("1. Add Expense")
+        print("2. View Expenses")
+        print("3. Track Budget")
+        print("4. Save Expenses")
+        print("5. Exit")
+        choice = input("Choose an option (1-5): ")
+
+        if choice == "1":
+            add_expense()
+        elif choice == "2":
+            view_expenses()
+        elif choice == "3":
+            track_budget()
+        elif choice == "4":
+            save_expenses()
+        elif choice == "5":
+            save_expenses()
+            print("👋 Exiting. Goodbye!")
+            break
+        else:
+            print("❌ Invalid choice. Please select a number between 1 and 5.")
+
+if __name__ == "__main__":
+    menu()
